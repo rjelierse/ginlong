@@ -1,29 +1,33 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"os/signal"
 	"syscall"
 
-	server2 "github.com/rjelierse/ginlong/internal/server"
-
+	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+
+	"github.com/rjelierse/ginlong/internal/server"
 )
 
-var logLevel = flag.String("log", "info", "Set the log output level")
+type Config struct {
+	LogLevel        string `default:"info" split_words:"true"`
+	ReceiverAddress string `default:":10000" split_words:"true"`
+}
 
 func main() {
-	flag.Parse()
+	var config Config
+	envconfig.MustProcess("GINLONG", &config)
 
-	level, err := zerolog.ParseLevel(*logLevel)
+	level, err := zerolog.ParseLevel(config.LogLevel)
 	if err != nil {
 		panic(err)
 	}
-	log := zerolog.New(os.Stdout).With().Logger().Level(level)
+	log := zerolog.New(os.Stdout).With().Timestamp().Logger().Level(level)
 
-	server := server2.NewServer(log)
-	if err := server.Listen(":10000"); err != nil {
+	receiver := server.New(log)
+	if err := receiver.Listen(config.ReceiverAddress); err != nil {
 		log.Fatal().Err(err).Msg("Failed to start TCP server")
 	}
 
@@ -35,5 +39,5 @@ func main() {
 		log.Info().Str("signal", sig.String()).Msg("Terminating after receiving signal")
 	}
 
-	server.Shutdown()
+	receiver.Shutdown()
 }

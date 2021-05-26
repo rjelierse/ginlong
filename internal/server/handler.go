@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rjelierse/ginlong/internal/message"
+
 	"github.com/rs/zerolog"
 )
 
@@ -16,64 +18,71 @@ const (
 )
 
 type handler struct {
-	logger zerolog.Logger
+	logger          zerolog.Logger
+	defaultProtocol uint8
 }
 
 func (h *handler) handleMessage(ctx context.Context, envelope Envelope) (Envelope, error) {
 	switch envelope.MessageType() {
-	case MessageTypeAnnounce:
+	case message.TypeAnnouncement:
 		return h.handleAnnounce(ctx, envelope)
-	case MessageTypeMeasurement:
+	case message.TypeMeasurement:
 		return h.handleMeasurement(ctx, envelope)
-	case MessageTypePing:
+	case message.TypePing:
 		return h.handlePing(ctx, envelope)
-	case MessageTypeAccessPointInfo:
+	case message.TypeAccessPointInfo:
 		return h.handleAccessPointInfo(ctx, envelope)
-	case MessageTypeUnk2:
+	case message.TypeUnk2:
 		return h.handleMessage48(ctx, envelope)
 	default:
-		return newResponse(envelope, ProtocolV2, newResponsePayload(0, 0)), ErrUnsupportedMessage
+		return newResponse(envelope, h.defaultProtocol, newResponsePayload(0, 0)), fmt.Errorf("%w: %s", ErrUnsupportedMessage, envelope.MessageType())
 	}
 }
 
 func (h *handler) handleAnnounce(ctx context.Context, envelope Envelope) (Envelope, error) {
-	var message Announcement
-	if err := message.UnmarshalBinary(envelope.Payload()); err != nil {
+	var msg message.Announcement
+	if err := msg.UnmarshalBinary(envelope.Payload()); err != nil {
 		return nil, fmt.Errorf("failed to parse payload: %w", err)
 	}
-	return newResponse(envelope, ProtocolV2, newResponsePayload(0x02, 0x01)), nil
+	return newResponse(envelope, h.defaultProtocol, newResponsePayload(0x02, 0x01)), nil
 }
 
 func (h *handler) handleMeasurement(ctx context.Context, envelope Envelope) (Envelope, error) {
-	var message Measurement
-	if err := message.UnmarshalBinary(envelope.Payload()); err != nil {
+	var msg message.Measurement
+	if err := msg.UnmarshalBinary(envelope.Payload()); err != nil {
 		return nil, fmt.Errorf("failed to parse payload: %w", err)
 	}
-	return newResponse(envelope, ProtocolV2, newResponsePayload(0x01, 0x01)), nil
+
+	h.logger.Debug().
+		Interface("measurement", msg).
+		Interface("fields", msg.Fields).
+		Msg("Measurement received")
+
+	return newResponse(envelope, h.defaultProtocol, newResponsePayload(0x01, 0x01)), nil
 }
 
 func (h *handler) handlePing(ctx context.Context, envelope Envelope) (Envelope, error) {
-	var message Ping
-	if err := message.UnmarshalBinary(envelope.Payload()); err != nil {
+	var msg message.Ping
+	if err := msg.UnmarshalBinary(envelope.Payload()); err != nil {
 		return nil, fmt.Errorf("failed to parse payload: %w", err)
 	}
-	return newResponse(envelope, ProtocolV2, newResponsePayload(0x00, 0x00)), nil
+	return newResponse(envelope, h.defaultProtocol, newResponsePayload(0x00, 0x00)), nil
 }
 
 func (h *handler) handleAccessPointInfo(ctx context.Context, envelope Envelope) (Envelope, error) {
-	var message AccessPointInfo
-	if err := message.UnmarshalBinary(envelope.Payload()); err != nil {
+	var msg message.AccessPointInfo
+	if err := msg.UnmarshalBinary(envelope.Payload()); err != nil {
 		return nil, fmt.Errorf("failed to parse payload: %w", err)
 	}
-	return newResponse(envelope, ProtocolV2, newResponsePayload(0x01, 0x01)), nil
+	return newResponse(envelope, h.defaultProtocol, newResponsePayload(0x01, 0x01)), nil
 }
 
 func (h *handler) handleMessage48(ctx context.Context, envelope Envelope) (Envelope, error) {
-	var message Message48
-	if err := message.UnmarshalBinary(envelope.Payload()); err != nil {
+	var msg message.Message48
+	if err := msg.UnmarshalBinary(envelope.Payload()); err != nil {
 		return nil, fmt.Errorf("failed to parse payload: %w", err)
 	}
-	return newResponse(envelope, ProtocolV2, newResponsePayload(0x01, 0x01)), nil
+	return newResponse(envelope, h.defaultProtocol, newResponsePayload(0x01, 0x01)), nil
 }
 
 func newResponsePayload(usr1, usr2 byte) []byte {

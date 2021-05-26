@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/rjelierse/ginlong/internal/message"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +17,7 @@ func TestEnvelope(t *testing.T) {
 	for _, tc := range []struct {
 		message         string
 		messageLength   uint8
-		messageType     MessageType
+		messageType     message.Type
 		messageCounter  uint8
 		protocolVersion uint8
 		originator      uint32
@@ -24,7 +26,7 @@ func TestEnvelope(t *testing.T) {
 		{
 			message:         "a5560010410001c8d2dd2a020de175001300000000000000053c780164034d575f30385f303530315f312e35380000000000000000000000000000000000000000000000000098d863e473b23139322e3136382e312e323532000000dc470101053215",
 			messageLength:   86,
-			messageType:     MessageTypeAnnounce,
+			messageType:     message.TypeAnnouncement,
 			messageCounter:  1,
 			protocolVersion: 0,
 			originator:      serialNo,
@@ -33,7 +35,7 @@ func TestEnvelope(t *testing.T) {
 		{
 			message:         "a5e90010420249c8d2dd2a810705801674004f010000000000000100d60e000031363045333132303431353030363820a5015a090c001a00010000000000160000000000790989131c020000c201000084170000000000000100000000000000000000000000010000000100720e0000f82ae8036e020000410000009000000058004701000012010000340004001c020000150004000c000e0011000e00e3002600400000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003007615",
 			messageLength:   233,
-			messageType:     MessageTypeMeasurement,
+			messageType:     message.TypeMeasurement,
 			messageCounter:  73,
 			protocolVersion: 2,
 			originator:      serialNo,
@@ -42,7 +44,7 @@ func TestEnvelope(t *testing.T) {
 		{
 			message:         "a5e90010420349c8d2dd2a810705cbe0740028000000000000000100820f000031363045333132303431353030363820fa01fa080c005f00010000000000530000000000a5098713020800006c020000f2170000000000000100000000000000000000000000010000000100fe0e0000f82ae803870800004d000000900000006000530100001201000034000400f8070000150004000d000e001d000400e3002600400000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003006515",
 			messageLength:   233,
-			messageType:     MessageTypeMeasurement,
+			messageType:     message.TypeMeasurement,
 			messageCounter:  73,
 			protocolVersion: 3,
 			originator:      serialNo,
@@ -51,7 +53,7 @@ func TestEnvelope(t *testing.T) {
 		{
 			message:         "a52f0010430008c8d2dd2a81ffe075000500000000000000000048617a65730000000000000000000000000000000000000000000000000064016515",
 			messageLength:   47,
-			messageType:     MessageTypeAccessPointInfo,
+			messageType:     message.TypeAccessPointInfo,
 			messageCounter:  8,
 			protocolVersion: 0,
 			originator:      serialNo,
@@ -60,7 +62,7 @@ func TestEnvelope(t *testing.T) {
 		{
 			message:         "a501001047000cc8d2dd2a000515",
 			messageLength:   1,
-			messageType:     MessageTypePing,
+			messageType:     message.TypePing,
 			messageCounter:  12,
 			protocolVersion: 0,
 			originator:      serialNo,
@@ -69,7 +71,7 @@ func TestEnvelope(t *testing.T) {
 		{
 			message:         "a53c001048000bc8d2dd2a01eee17500f4000000a949016001052c84e5715e4d575f30385f303530315f312e353800000000000000000000000000000000000000000000000000f115",
 			messageLength:   60,
-			messageType:     MessageTypeUnk2,
+			messageType:     message.TypeUnk2,
 			messageCounter:  11,
 			protocolVersion: 0,
 			originator:      serialNo,

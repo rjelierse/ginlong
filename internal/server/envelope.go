@@ -2,6 +2,9 @@ package server
 
 import (
 	"bytes"
+
+	"github.com/rjelierse/ginlong/internal/binary"
+	"github.com/rjelierse/ginlong/internal/message"
 )
 
 const (
@@ -65,8 +68,8 @@ func (env Envelope) Length() uint8 {
 	return env[addrLength]
 }
 
-func (env Envelope) MessageType() MessageType {
-	return MessageType(env[addrMessageType])
+func (env Envelope) MessageType() message.Type {
+	return message.Type(env[addrMessageType])
 }
 
 func (env Envelope) ProtocolVersion() uint8 {
@@ -78,7 +81,7 @@ func (env Envelope) MessageCounter() uint8 {
 }
 
 func (env Envelope) Originator() uint32 {
-	return readUint32(env, addrOriginator)
+	return binary.ReadUint32(env, addrOriginator)
 }
 
 func (env Envelope) Payload() []byte {

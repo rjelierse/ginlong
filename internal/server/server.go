@@ -28,11 +28,12 @@ type Server struct {
 	shutdownFn context.CancelFunc
 }
 
-func NewServer(logger zerolog.Logger) *Server {
+func New(logger zerolog.Logger) *Server {
 	return &Server{
 		logger: logger,
 		handler: &handler{
-			logger: logger,
+			logger:          logger,
+			defaultProtocol: ProtocolV3,
 		},
 	}
 }
